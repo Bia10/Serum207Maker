@@ -3,16 +3,15 @@ package com.bia10.herblore;
 import com.google.inject.Provides;
 import com.tonic.Logger;
 import com.tonic.Static;
-import com.tonic.api.entities.NpcAPI;
 import com.tonic.api.threaded.Delays;
 import com.tonic.api.widgets.BankAPI;
 import com.tonic.api.widgets.WidgetAPI;
-import com.tonic.data.ItemEx;
+import com.tonic.data.wrappers.ItemEx;
+import com.tonic.data.wrappers.NpcEx;
+import com.tonic.data.wrappers.abstractions.Entity;
 import com.tonic.queries.InventoryQuery;
-import com.tonic.queries.NpcQuery;
 import com.tonic.util.VitaPlugin;
 import net.runelite.api.Client;
-import net.runelite.api.NPC;
 import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.gameval.InventoryID;
 import net.runelite.api.gameval.ItemID;
@@ -27,7 +26,6 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 
 @PluginDescriptor(
         name = "Serum 207 Maker",
@@ -198,11 +196,11 @@ public class Serum207MakerPlugin extends VitaPlugin {
 
     private void openBankInterface()
     {
-        NPC banker = getNearestBanker();
+        Entity banker = getNearestBanker();
         if (banker != null)
         {
             sidePanel.updateStatus("Interacting with Banker...", Color.CYAN);
-            NpcAPI.interact(banker, "Bank");
+            banker.interact("Bank");
             return;
         }
 
@@ -210,10 +208,11 @@ public class Serum207MakerPlugin extends VitaPlugin {
         currentState = SerumMakerState.ERROR;
     }
 
-    private NPC getNearestBanker() {
-        if (client.getLocalPlayer() == null) return null;
-        NpcQuery query = new NpcQuery().withName("Banker");
-        Optional<NPC> nearestNpc = Optional.ofNullable(query.nearest(client.getLocalPlayer().getWorldLocation()));
-        return nearestNpc.orElse(null);
+    private Entity getNearestBanker() {
+        return Entity.search()
+                .ofTypes(NpcEx.class)
+                .withNamesContains("Banker")
+                .withinDistance(15)
+                .shortestPath();
     }
 }
